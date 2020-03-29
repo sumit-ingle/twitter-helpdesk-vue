@@ -8,7 +8,8 @@ import AuthService from './services/AuthService';
 import VueSocketio from "vue-socket.io-extended";
 import io from "socket.io-client";
 
-Vue.use(VueSocketio, io("http://127.0.0.1:8080"), {store});
+// Vue.use(VueSocketio, io("http://127.0.0.1:8080"), {store});
+Vue.use(VueSocketio, io("https://vue-twitter-dashboard.herokuapp.com"), {store});
 
 Vue.config.productionTip = false
 Vue.component('app-alert', AlertComponent)

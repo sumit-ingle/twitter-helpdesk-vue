@@ -81,7 +81,8 @@ app.get("/", function (req, res) {
 app.get('/api/login', (req, res) => {
   // OAuth step 1
   let oauth = {
-            callback: 'http://127.0.0.1:8080/login/callback',
+            // callback: 'http://127.0.0.1:8080/login/callback',
+            callback: 'https://vue-twitter-dashboard.herokuapp.com/login/callback',
             consumer_key: consumerKey,
             consumer_secret: consumerSecret
   };
@@ -129,7 +130,8 @@ app.get('/login/callback', (req, res) => {
       url: `${twitterApiURL}/account_activity/all/dev/subscriptions.json`,
       oauth: oauth
     }, (e, r, body) => {
-      res.redirect('http://127.0.0.1:8080/');
+      // res.redirect('http://127.0.0.1:8080/');
+      res.redirect('https://vue-twitter-dashboard.herokuapp.com');
       console.log(`subscription status: ${body}`);
     })
   });
