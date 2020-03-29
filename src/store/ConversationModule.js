@@ -14,6 +14,9 @@ const ConversationModule = {
     },
     setTweetReplies (state, tweetReplies) {
       state.tweetReplies = tweetReplies;
+    },
+    pushTweetToConversation (state, tweet) {
+      state.tweetReplies.push(tweet);
     }
   },
   actions: {
@@ -29,6 +32,15 @@ const ConversationModule = {
     getTweetReplies ({ dispatch, commit }, tweet) {
       twitterService.getTweetReplies(tweet).then(response => {
       commit('setTweetReplies', response.data)
+      })
+    },
+    replyToTweet ({ dispatch, commit }, payload) {
+      let tweetObj = {status: payload.status, in_reply_to_status_id: payload.tweet.id_str}
+      twitterService.postTweet(tweetObj).then(response => {
+        commit('pushTweetToConversation', response.data)
+      })
+      .catch(error => {
+        console.error(error);
       })
     }
   },

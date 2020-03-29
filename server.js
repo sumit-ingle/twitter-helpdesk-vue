@@ -177,17 +177,15 @@ function fireTwitterSearchApi (req, res, count, finalResult) {
       if (searchData && searchData.statuses) {
         let searchTweetId = requestTweet.retweeted ? requestTweet.retweeted_status.id_str : requestTweet.id_str;
         let replies = searchData.statuses.filter(tweet => tweet.in_reply_to_status_id_str === searchTweetId);
-        if (replies && replies.length > 0) {
+        if (replies && replies.length > 0 && count > 0) {
           replies.sort((t1, t2) => {
             return (new Date(t1.created_at).getTime() - new Date(t2.created_at).getTime())
           });
           finalResult.push(...replies);
           let latestReply = finalResult[finalResult.length - 1];
-          if (count > 0) {
-            req.body.data = latestReply;
-            count--;
-            fireTwitterSearchApi(req, res, count, finalResult);
-          }
+          req.body.data = latestReply;
+          count--;
+          fireTwitterSearchApi(req, res, count, finalResult);
         }
         else {
           res.status(200).send(finalResult);

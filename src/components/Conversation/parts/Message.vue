@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="tweet" v-for="(tweet,index) in tweets" v-bind:key="index" :class="{own: tweet.user.screen_name == username}">
+    <div class="message" v-for="(tweet,index) in tweets" v-bind:key="index" :class="{own: tweet.user.screen_name == username}">
       <div class="username" v-if="index>0 && tweets[index-1].user.screen_name != tweet.user.screen_name">{{tweet.user.screen_name}}</div>
       <div class="username" v-if="index == 0">{{tweet.user.screen_name}}</div>
       <div style="margin-top: 5px"></div>
