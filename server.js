@@ -15,13 +15,10 @@ const request = require('request');
 const querystring = require('querystring');
 const cors = require('cors');
 const http = require('http');
-// const https = require('https');
 const app = express();
 const server = http.createServer(app);
-// const Twit = require('twit');
 const io = require('socket.io').listen(server);
 const sharedsession = require("express-socket.io-session");
-// const twitterWebhooks = require('twitter-webhooks');
 
 const corsOption = {
   origin: true,
@@ -35,27 +32,7 @@ const port = process.env.PORT || 8080
 const twitterApiURL = "https://api.twitter.com/1.1";
 const consumerKey = process.env.CONSUMER_KEY;
 const consumerSecret = process.env.CONSUMER_SECRET;
-// const __dirname = 
-
-// var T = new Twit({
-//   consumer_key: consumerKey,
-//   consumer_secret: consumerSecret,
-//   access_token: '292498039-fgX32z7TlddLM8doNL3jUREOVin5xWUF3WIjA4LL',
-//   access_token_secret: 'oqAYyzQUWu7gELpCZJWakIovOd4yUV36jz0pxe8SvK7OQ'
-// })
-
-// const userActivityWebhook = twitterWebhooks.userActivity({
-//   serverUrl: 'https://2a3d53c6.ngrok.io',
-//   route: '/webhook/twitter', //default : '/'
-//   consumerKey: consumerKey,
-//   consumerSecret: consumerSecret,
-//   accessToken: '292498039-fgX32z7TlddLM8doNL3jUREOVin5xWUF3WIjA4LL',
-//   accessTokenSecret: 'oqAYyzQUWu7gELpCZJWakIovOd4yUV36jz0pxe8SvK7OQ',
-//   environment: 'dev', //default : 'env-beta'
-//   app
-// });
-
-// userActivityWebhook.register();
+const maxApiCallsForReplies = 5;
 
 const oauthMiddleware = (req, res, next) => {
   req.oauth = {
@@ -74,15 +51,15 @@ app.use(cookieParser());
 app.use(session);
 io.use(sharedsession(session));
 
-app.get("/", function (req, res) {
+app.get(/^((?!api|webhook).)*$/, function (req, res) {
 	res.sendFile(path.join(__dirname, '/dist/index.html'))
 })
 
 app.get('/api/login', (req, res) => {
   // OAuth step 1
   let oauth = {
-            // callback: 'http://127.0.0.1:8080/login/callback',
-            callback: 'https://vue-twitter-dashboard.herokuapp.com/login/callback',
+            // callback: 'http://127.0.0.1:8080/api/login/callback',
+            callback: 'https://vue-twitter-dashboard.herokuapp.com/api/login/callback',
             consumer_key: consumerKey,
             consumer_secret: consumerSecret
   };
@@ -103,7 +80,7 @@ app.get('/api/login', (req, res) => {
   });
 });
 
-app.get('/login/callback', (req, res) => {
+app.get('/api/login/callback', (req, res) => {
   let authData = req.query;
   let oauth =
       {
@@ -184,26 +161,41 @@ app.get('/api/tweets', oauthMiddleware, (req, res) => {
 });
 
 app.post('/api/tweetReplies', oauthMiddleware, (req, res) => {
+  fireTwitterSearchApi(req, res, maxApiCallsForReplies, []);
+});
+
+function fireTwitterSearchApi (req, res, count, finalResult) {
   let requestTweet = req.body.data;
   let url = 'https://api.twitter.com/1.1/search/tweets.json?q=%40' + requestTweet.user.screen_name
             + '&since_id' + requestTweet.id_str;
             // + '&count=10';
-  request.get({url: url, oauth: req.oauth}, (e, r, body) => {
+  request.get({url: url, oauth: req.oauth}, function getTweetReplies (e, r, body) {
     if (e || r.statusCode !== 200) {
       res.status(500).send({message: 'Error getting user tweets : ' + inspect(e)});
     } else {
       let searchData = JSON.parse(body);
-      let replies = [];
-      let searchTweetId = requestTweet.retweeted ? requestTweet.retweeted_status.id_str : requestTweet.id_str;
-      for (let i = 0; i < searchData.statuses.length; i++) {
-        if (searchData.statuses[i].in_reply_to_status_id_str === searchTweetId) {
-          replies.push(searchData.statuses[i]);
+      if (searchData && searchData.statuses) {
+        let searchTweetId = requestTweet.retweeted ? requestTweet.retweeted_status.id_str : requestTweet.id_str;
+        let replies = searchData.statuses.filter(tweet => tweet.in_reply_to_status_id_str === searchTweetId);
+        if (replies && replies.length > 0) {
+          replies.sort((t1, t2) => {
+            return (new Date(t1.created_at).getTime() - new Date(t2.created_at).getTime())
+          });
+          finalResult.push(...replies);
+          let latestReply = finalResult[finalResult.length - 1];
+          if (count > 0) {
+            req.body.data = latestReply;
+            count--;
+            fireTwitterSearchApi(req, res, count, finalResult);
+          }
+        }
+        else {
+          res.status(200).send(finalResult);
         }
       }
-      res.status(200).send(replies);
     }
   });
-});
+}
 
 app.post('/api/tweets', oauthMiddleware, (req, res) => {
   let url = 'https://api.twitter.com/1.1/statuses/update.json?'
