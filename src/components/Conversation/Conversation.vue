@@ -5,9 +5,9 @@
         <chats></chats>
       </v-col>
       <v-col sm="9" style="position: relative;">
-        <div class="chat-container" v-if="id == undefined" ref="chatContainer" >
+        <!-- <div class="chat-container" v-if="id == undefined" ref="chatContainer" >
           Select a tweet to begin...
-        </div>
+        </div> -->
         <div class="chat-container" v-on:scroll="onScroll" ref="chatContainer" >
           <message :tweets="tweets" @imageLoad="scrollToEnd"></message>
         </div>
@@ -35,7 +35,7 @@
       'id'
     ],
     mounted () {
-      this.loadConversation()
+      // this.loadConversation()
     },
     components: {
       'message': Message,
@@ -59,21 +59,20 @@
     },
     methods: {
       loadConversation () {
-        this.totalChatHeight = this.$refs.chatContainer.scrollHeight
-        this.loading = false
-        if (this.id !== undefined) {
-          this.chatMessages = []
-          let chatID = Number(this.id)
-          let tweet = this.$store.getters.tweets[chatID]
-          this.$store.dispatch('getTweetReplies', tweet);
-        }
+        // this.totalChatHeight = this.$refs.chatContainer.scrollHeight
+        // this.loading = false
+        // if (this.id !== undefined) {
+        //   this.chatMessages = []
+        //   let chatID = Number(this.id)
+        //   let tweet = this.$store.getters.tweets[chatID]
+        //   this.$store.dispatch('getTweetReplies', tweet);
+        // }
       },
       onScroll () {
       },
       replyToTweet () {
         if (this.content !== '') {
-          let currentTweetNumber = Number(this.id)
-          let selectedTweet = this.$store.getters.tweets[currentTweetNumber]
+          let selectedTweet = this.$store.getters.currentTweet
           //TODO: remove old logic
           // let tweetReplies = this.$store.getters.tweetReplies;
           // let tweetToReply; //the tweet to reply against
