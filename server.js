@@ -237,7 +237,7 @@ io.sockets.on('connection', function (socket) {
                 let latest_tweet = tweets.reduce((max, tweet) => new Date(max.created_at).getTime() > new Date(tweet.created_at).getTime() ? max : tweet);
                 since_id = latest_tweet.id_str;
               }
-              io.emit('tweet', tweets);
+              socket.emit('tweet', tweets);
             }
         });
       }
