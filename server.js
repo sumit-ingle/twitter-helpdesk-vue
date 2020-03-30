@@ -161,6 +161,31 @@ app.get('/api/tweets', oauthMiddleware, (req, res) => {
 });
 
 app.post('/api/tweetReplies', oauthMiddleware, (req, res) => {
+  let requestTweet = req.body.data;
+  let url = 'https://api.twitter.com/1.1/search/tweets.json?q=to%3A' + requestTweet.user.screen_name
+            + '&since_id' + requestTweet.id_str;
+            // + '&count=10';
+  request.get({url: url, oauth: req.oauth}, (e, r, body) => {
+    if (e || r.statusCode !== 200) {
+      res.status(500).send({message: 'Error getting user tweets : ' + inspect(e)});
+    } else {
+      let searchData = JSON.parse(body);
+      let replies = [];
+      let searchTweetId = requestTweet.retweeted ? requestTweet.retweeted_status.id_str : requestTweet.id_str;
+      for (let i = 0; i < searchData.statuses.length; i++) {
+        if (searchData.statuses[i].in_reply_to_status_id_str === searchTweetId) {
+          replies.push(searchData.statuses[i]);
+        }
+      }
+      replies.sort((t1, t2) => {
+        return (new Date(t1.created_at).getTime() - new Date(t2.created_at).getTime())
+      });
+      res.status(200).send(replies);
+    }
+  });
+});
+
+app.post('/api/tweetReplies/new', oauthMiddleware, (req, res) => {
   fireTwitterSearchApi(req, res, maxApiCallsForReplies, []);
 });
 
@@ -183,9 +208,9 @@ function fireTwitterSearchApi (req, res, count, finalResult) {
           });
           finalResult.push(...replies);
           let latestReply = finalResult[finalResult.length - 1];
-          req.body.data = latestReply;
-          count--;
-          fireTwitterSearchApi(req, res, count, finalResult);
+            req.body.data = latestReply;
+            count--;
+            fireTwitterSearchApi(req, res, count, finalResult);
         }
         else {
           res.status(200).send(finalResult);

@@ -74,23 +74,24 @@
         if (this.content !== '') {
           let currentTweetNumber = Number(this.id)
           let selectedTweet = this.$store.getters.tweets[currentTweetNumber]
-          let tweetReplies = this.$store.getters.tweetReplies;
-          let tweetToReply; //the tweet to reply against
-          if (tweetReplies && tweetReplies.length > 0) {
-            let lastReplyId = tweetReplies.length - 1
-            //get last reply from some user other than logged in user
-            while (tweetReplies[lastReplyId].user.screen_name == this.username && lastReplyId >= 0) {
-              lastReplyId--;
-            }
-            //if conversation thread contains tweets tweeted only by logged in user
-            if (lastReplyId == -1) {
-              lastReplyId = tweetReplies.length - 1
-            }
-            tweetToReply = tweetReplies[lastReplyId];
-          } else {
-            tweetToReply = selectedTweet
-          }
-          this.$store.dispatch('replyToTweet', {status: `@${tweetToReply.user.screen_name} ${this.content}`, tweet: tweetToReply});
+          //TODO: remove old logic
+          // let tweetReplies = this.$store.getters.tweetReplies;
+          // let tweetToReply; //the tweet to reply against
+          // if (tweetReplies && tweetReplies.length > 0) {
+          //   let lastReplyId = tweetReplies.length - 1
+          //   //get last reply from some user other than logged in user
+          //   while (tweetReplies[lastReplyId].user.screen_name == this.username && lastReplyId >= 0) {
+          //     lastReplyId--;
+          //   }
+          //   //if conversation thread contains tweets tweeted only by logged in user
+          //   if (lastReplyId == -1) {
+          //     lastReplyId = tweetReplies.length - 1
+          //   }
+          //   tweetToReply = tweetReplies[lastReplyId];
+          // } else {
+          //   tweetToReply = selectedTweet
+          // }
+          this.$store.dispatch('replyToTweet', {status: `@${selectedTweet.user.screen_name} ${this.content}`, tweet: selectedTweet});
           this.content = ''
         }
       },
