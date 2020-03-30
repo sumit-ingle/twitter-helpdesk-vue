@@ -299,7 +299,8 @@ io.sockets.on('connection', function (socket) {
 //using this webhook for listening to twitter replies.
 app.post('/webhook/twitter', function(request, response) {
   console.log(request.body);
-  io.emit('twitter_event', request.body);
+  let tweetData = request.body;
+  io.emit('twitterEvent', tweetData);
   response.send('200 OK');
 })
 
