@@ -5,6 +5,9 @@
         <chats></chats>
       </v-col>
       <v-col sm="9" style="position: relative;">
+        <div class="chat-container" v-if="id == undefined" ref="chatContainer" >
+          Select a tweet to begin...
+        </div>
         <div class="chat-container" v-on:scroll="onScroll" ref="chatContainer" >
           <message :tweets="tweets" @imageLoad="scrollToEnd"></message>
         </div>
@@ -69,6 +72,8 @@
       },
       replyToTweet () {
         if (this.content !== '') {
+          let currentTweetNumber = Number(this.id)
+          let selectedTweet = this.$store.getters.tweets[currentTweetNumber]
           let tweetReplies = this.$store.getters.tweetReplies;
           let tweetToReply; //the tweet to reply against
           if (tweetReplies && tweetReplies.length > 0) {
@@ -83,8 +88,7 @@
             }
             tweetToReply = tweetReplies[lastReplyId];
           } else {
-            let tweetNumber = Number(this.id)
-            tweetToReply = this.$store.getters.tweets[tweetNumber]
+            tweetToReply = selectedTweet
           }
           this.$store.dispatch('replyToTweet', {status: `@${tweetToReply.user.screen_name} ${this.content}`, tweet: tweetToReply});
           this.content = ''
