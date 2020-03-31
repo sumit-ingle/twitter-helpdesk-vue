@@ -304,6 +304,9 @@ app.post('/webhook/twitter', function(request, response) {
   response.send('200 OK');
 })
 
+var webhook_route = require('./webhook')
+app.get('/webhook/twitter', webhook_route.get_twitter_crc)
+
 server.listen(port, function() {
   console.log(`app is listening on port: ${port}`);
 });
